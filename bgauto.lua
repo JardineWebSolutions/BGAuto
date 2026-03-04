@@ -88,9 +88,15 @@ panel:Hide()
 
 -- Helper to create checkboxes
 local function CreateCheckbox(parent, text, key, y)
-    local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+    local cb = CreateFrame("CheckButton", nil, parent)
+    cb:SetSize(20, 20)
     cb:SetPoint("TOPLEFT", 20, y)
-    cb.text:SetText(text)
+    
+    -- Create the text label
+    local cbText = cb:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    cbText:SetPoint("LEFT", cb, "RIGHT", 5, 0)
+    cbText:SetText(text)
+    
     cb:SetChecked(BGAutoDB.bgs[key])
 
     cb:SetScript("OnClick", function(self)
