@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: BGAuto
+## Notes: Automatic battleground queue for Turtle WoW
+## Version: 1.0
+## SavedVariables: BGAutoDB
+BGAuto.lua
