@@ -80,7 +80,8 @@ f:SetScript("OnEvent", TryQueue)
 -- Minimal settings panel
 --====================================================
 local panel = CreateFrame("Frame", "BGAutoPanel", UIParent)
-panel:SetSize(200, 180)
+panel:SetWidth(200)
+panel:SetHeight(180)
 panel:SetPoint("CENTER")
 panel:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background"})
 panel:SetBackdropColor(0,0,0,0.8)
@@ -89,7 +90,8 @@ panel:Hide()
 -- Helper to create checkboxes
 local function CreateCheckbox(parent, text, key, y)
     local cb = CreateFrame("CheckButton", nil, parent)
-    cb:SetSize(20, 20)
+    cb:SetWidth(20)
+    cb:SetHeight(20)
     cb:SetPoint("TOPLEFT", 20, y)
     
     -- Create the text label
