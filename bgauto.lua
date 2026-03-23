@@ -103,6 +103,16 @@ end
 --====================================================
 local function TryQueue()
     if not BGAutoDB.enabled then return end
+    
+    -- Initialize arenas table if it doesn't exist (for backwards compatibility)
+    if not BGAutoDB.arenas then
+        BGAutoDB.arenas = {
+            rated2v2 = false,
+            rated3v3 = false,
+            rated5v5 = false,
+            skirmish = false,
+        }
+    end
 
     -- Check arenas first
     if BGAutoDB.arenas.rated2v2 then
@@ -274,7 +284,17 @@ local function CreateArenaCheckbox(parent, text, key, y)
     cbText:SetPoint("LEFT", cb, "RIGHT", 5, 0)
     cbText:SetText(text)
     
-    cb:SetChecked(BGAutoDB.arenas[key])
+    -- Ensure arenas table exists
+    if not BGAutoDB.arenas then
+        BGAutoDB.arenas = {
+            rated2v2 = false,
+            rated3v3 = false,
+            rated5v5 = false,
+            skirmish = false,
+        }
+    end
+    
+    cb:SetChecked(BGAutoDB.arenas[key] or false)
     
     cb:SetScript("OnClick", function()
         BGAutoDB.arenas[key] = cb:GetChecked()
