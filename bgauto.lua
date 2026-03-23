@@ -469,33 +469,16 @@ SlashCmdList["BGAUTODEBUG"] = function()
     
     table.sort(battleframes)
     for _, name in ipairs(battleframes) do
-        local frame = _G[name]
-        print("  " .. name .. " - " .. type(frame))
-        if type(frame) == "table" and frame.GetName then
-            pcall(function()
-                if frame:GetChildren then
-                    local children = {frame:GetChildren()}
-                    if #children > 0 then
-                        print("    Children: " .. #children)
-                        for i, child in ipairs(children) do
-                            if child.GetName then
-                                local childName = pcall(function() return child:GetName() end) and child:GetName() or "Unknown"
-                                print("      - " .. childName)
-                            end
-                        end
-                    end
-                end
-            end)
-        end
+        print("  " .. name)
     end
     
     print("=== Looking for visible buttons ===")
     for key in pairs(_G) do
         local obj = _G[key]
-        if type(obj) == "table" and obj.IsVisible and pcall(function() obj:IsVisible() end) then
-            if obj:IsVisible() and obj.GetText and pcall(function() obj:GetText() end) then
-                local txt = obj:GetText()
-                if txt and (txt:find("Queue") or txt:find("Join") or txt:find("Finder")) then
+        if type(obj) == "table" and obj.IsVisible then
+            if obj:IsVisible() and obj.GetText then
+                local success, txt = pcall(function() return obj:GetText() end)
+                if success and txt and (txt:find("Queue") or txt:find("Join") or txt:find("Finder")) then
                     print("  Visible: " .. key .. " = '" .. txt .. "'")
                 end
             end
