@@ -453,41 +453,27 @@ SlashCmdList["BGAUTO"] = function()
     end
 end
 
--- Debug slash command - prints 10 results at a time, use /bgautodebug again for next page
-BGAutoDebugPage = 0
-BGAutoDebugResults = {}
-
+-- Debug slash command - shows frame name under mouse cursor
 SLASH_BGAUTODEBUG1 = "/bgautodebug"
 SlashCmdList["BGAUTODEBUG"] = function()
-    if getn(BGAutoDebugResults) == 0 then
-        BGAutoDebugPage = 0
-        for key in pairs(_G) do
-            local lower = strlower(key)
-            if string.find(lower, "battlefield") or string.find(lower, "battleground") or string.find(lower, "bgfinder") or string.find(lower, "twminimap") then
-                table.insert(BGAutoDebugResults, key)
+    local frame = GetMouseFocus()
+    if frame then
+        local name = frame:GetName() or "unnamed"
+        local parent = frame:GetParent()
+        local parentName = "none"
+        if parent and parent.GetName then
+            parentName = parent:GetName() or "unnamed"
+        end
+        print("Frame: " .. name)
+        print("Parent: " .. parentName)
+        if frame.GetText then
+            local txt = frame:GetText()
+            if txt then
+                print("Text: " .. txt)
             end
         end
-        table.sort(BGAutoDebugResults)
-        print("BGAuto: Found " .. getn(BGAutoDebugResults) .. " frames. Showing 10 at a time:")
-    end
-    
-    local startIdx = BGAutoDebugPage * 10 + 1
-    local endIdx = startIdx + 9
-    if endIdx > getn(BGAutoDebugResults) then
-        endIdx = getn(BGAutoDebugResults)
-    end
-    
-    for i = startIdx, endIdx do
-        print(i .. ": " .. BGAutoDebugResults[i])
-    end
-    
-    BGAutoDebugPage = BGAutoDebugPage + 1
-    
-    if endIdx >= getn(BGAutoDebugResults) then
-        print("=== End of list ===")
-        BGAutoDebugResults = {}
     else
-        print("--- Type /bgautodebug for next page ---")
+        print("No frame under cursor")
     end
 end
 
