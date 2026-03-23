@@ -453,6 +453,56 @@ SlashCmdList["BGAUTO"] = function()
     end
 end
 
+-- Debug slash command
+SLASH_BGAUTODEBUG1 = "/bgautodebug"
+SlashCmdList["BGAUTODEBUG"] = function()
+    print("=== BGAuto Debug Info ===")
+    print("Looking for frames with 'battle', 'queue', 'arena', 'bg', 'finder' in name:")
+    
+    local battleframes = {}
+    for key in pairs(_G) do
+        local lower = key:lower()
+        if lower:find("battle") or lower:find("queue") or lower:find("arena") or lower:find("bg") or lower:find("finder") then
+            table.insert(battleframes, key)
+        end
+    end
+    
+    table.sort(battleframes)
+    for _, name in ipairs(battleframes) do
+        local frame = _G[name]
+        print("  " .. name .. " - " .. type(frame))
+        if type(frame) == "table" and frame.GetName then
+            pcall(function()
+                if frame:GetChildren then
+                    local children = {frame:GetChildren()}
+                    if #children > 0 then
+                        print("    Children: " .. #children)
+                        for i, child in ipairs(children) do
+                            if child.GetName then
+                                local childName = pcall(function() return child:GetName() end) and child:GetName() or "Unknown"
+                                print("      - " .. childName)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    
+    print("=== Looking for visible buttons ===")
+    for key in pairs(_G) do
+        local obj = _G[key]
+        if type(obj) == "table" and obj.IsVisible and pcall(function() obj:IsVisible() end) then
+            if obj:IsVisible() and obj.GetText and pcall(function() obj:GetText() end) then
+                local txt = obj:GetText()
+                if txt and (txt:find("Queue") or txt:find("Join") or txt:find("Finder")) then
+                    print("  Visible: " .. key .. " = '" .. txt .. "'")
+                end
+            end
+        end
+    end
+end
+
 --====================================================
 -- Initial test print
 --====================================================
