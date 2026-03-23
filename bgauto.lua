@@ -108,8 +108,8 @@ local function CreateCheckbox(parent, text, key, y)
     
     cb:SetChecked(BGAutoDB.bgs[key])
 
-    cb:SetScript("OnClick", function(self)
-        BGAutoDB.bgs[key] = self:GetChecked()
+    cb:SetScript("OnClick", function()
+        BGAutoDB.bgs[key] = cb:GetChecked()
     end)
 end
 
