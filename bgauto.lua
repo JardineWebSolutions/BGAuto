@@ -456,13 +456,12 @@ end
 -- Debug slash command
 SLASH_BGAUTODEBUG1 = "/bgautodebug"
 SlashCmdList["BGAUTODEBUG"] = function()
-    print("=== BGAuto Debug Info ===")
-    print("Looking for frames with 'battle', 'queue', 'arena', 'bg', 'finder' in name:")
+    print("=== BGAuto Debug ===")
     
     local battleframes = {}
     for key in pairs(_G) do
         local lower = strlower(key)
-        if string.find(lower, "battle") or string.find(lower, "queue") or string.find(lower, "arena") or string.find(lower, "bg") or string.find(lower, "finder") then
+        if string.find(lower, "battlefield") or string.find(lower, "battleground") or string.find(lower, "bgfinder") or string.find(lower, "twminimap") then
             table.insert(battleframes, key)
         end
     end
@@ -472,19 +471,7 @@ SlashCmdList["BGAUTODEBUG"] = function()
         print("  " .. name)
     end
     
-    print("=== Looking for visible buttons ===")
-    for key in pairs(_G) do
-        local obj = _G[key]
-        if type(obj) == "table" and obj.IsVisible and obj.GetText then
-            local visible = obj:IsVisible()
-            if visible then
-                local txt = obj:GetText()
-                if txt and (string.find(txt, "Queue") or string.find(txt, "Join") or string.find(txt, "Finder")) then
-                    print("  Visible: " .. key .. " = '" .. txt .. "'")
-                end
-            end
-        end
-    end
+    print("=== Done ===")
 end
 
 --====================================================
