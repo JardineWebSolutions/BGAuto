@@ -236,6 +236,8 @@ local function CreateCheckbox(parent, text, key, y)
 
     cb:SetScript("OnClick", function()
         BGAutoDB.bgs[key] = cb:GetChecked()
+        -- Immediately queue when checkbox is clicked
+        TryQueue()
     end)
 end
 
@@ -276,6 +278,8 @@ local function CreateArenaCheckbox(parent, text, key, y)
     
     cb:SetScript("OnClick", function()
         BGAutoDB.arenas[key] = cb:GetChecked()
+        -- Immediately queue when checkbox is clicked
+        TryQueue()
     end)
 end
 
@@ -294,6 +298,23 @@ closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
 closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
 closeBtn:SetScript("OnClick", function()
     panel:Hide()
+end)
+
+-- Add Queue Now button
+local queueBtn = CreateFrame("Button", nil, panel)
+queueBtn:SetWidth(100)
+queueBtn:SetHeight(24)
+queueBtn:SetPoint("BOTTOM", panel, "BOTTOM", 0, 10)
+queueBtn:SetNormalTexture("Interface\\Buttons\\UI-DialogBox-Button-Up")
+queueBtn:SetPushedTexture("Interface\\Buttons\\UI-DialogBox-Button-Down")
+queueBtn:SetHighlightTexture("Interface\\Buttons\\UI-DialogBox-Button-Highlight")
+
+local queueBtnText = queueBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+queueBtnText:SetPoint("CENTER", queueBtn, "CENTER", 0, 0)
+queueBtnText:SetText("Queue Now")
+
+queueBtn:SetScript("OnClick", function()
+    TryQueue()
 end)
 
 -- Slash command to toggle panel
