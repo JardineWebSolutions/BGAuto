@@ -14,8 +14,10 @@ BGAutoDB = BGAutoDB or {
         tg = false,
     },
     arenas = {
-        arena3v3 = false,
-        arena2v2 = false,
+        rated2v2 = false,
+        rated3v3 = false,
+        rated5v5 = false,
+        skirmish = false,
     }
 }
 
@@ -103,13 +105,23 @@ local function TryQueue()
     if not BGAutoDB.enabled then return end
 
     -- Check arenas first
-    if BGAutoDB.arenas.arena3v3 then
-        SelectArenaType("3v3 Skirmish")
+    if BGAutoDB.arenas.rated2v2 then
+        SelectArenaType("Rated (2v2)")
         return
     end
     
-    if BGAutoDB.arenas.arena2v2 then
-        SelectArenaType("2v2 Skirmish")
+    if BGAutoDB.arenas.rated3v3 then
+        SelectArenaType("Rated (3v3)")
+        return
+    end
+    
+    if BGAutoDB.arenas.rated5v5 then
+        SelectArenaType("Rated (5v5)")
+        return
+    end
+    
+    if BGAutoDB.arenas.skirmish then
+        SelectArenaType("Skirmish")
         return
     end
 
@@ -195,7 +207,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "BGAutoPanel", UIParent)
 panel:SetWidth(220)
-panel:SetHeight(250)
+panel:SetHeight(320)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background"})
 panel:SetBackdropColor(0,0,0,0.8)
@@ -267,8 +279,10 @@ local function CreateArenaCheckbox(parent, text, key, y)
     end)
 end
 
-CreateArenaCheckbox(panel, "3v3 Skirmish", "arena3v3", -145)
-CreateArenaCheckbox(panel, "2v2 Skirmish", "arena2v2", -170)
+CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -145)
+CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -170)
+CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -195)
+CreateArenaCheckbox(panel, "Skirmish", "skirmish", -220)
 
 -- Add close button
 local closeBtn = CreateFrame("Button", nil, panel)
