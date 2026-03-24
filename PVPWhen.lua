@@ -16,8 +16,16 @@ PVPWhenDB = PVPWhenDB or {
         rated2v2 = false,
         rated3v3 = false,
         rated5v5 = false,
+    },
+    minimap = {
+        show = true,
+        angle = 200,
     }
 }
+
+if not PVPWhenDB.minimap then
+    PVPWhenDB.minimap = { show = true, angle = 200 }
+end
 
 if not PVPWhenDB.arenas then
     PVPWhenDB.arenas = {
@@ -179,7 +187,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(250)
-panel:SetHeight(340)
+panel:SetHeight(370)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -350,13 +358,132 @@ queueBtn:SetScript("OnClick", function()
     QueueAll()
 end)
 
+-- Minimap icon toggle checkbox
+local mmCb = MakeCheckbox(panel, "Show Minimap Icon", -280)
+if not PVPWhenDB.minimap then PVPWhenDB.minimap = { show = true, angle = 200 } end
+mmCb:SetChecked(PVPWhenDB.minimap.show)
+mmCb:SetScript("OnClick", function()
+    PVPWhenDB.minimap.show = mmCb:GetChecked()
+    if PVPWhenDB.minimap.show then
+        _G["PVPWhenMinimapButton"]:Show()
+    else
+        _G["PVPWhenMinimapButton"]:Hide()
+    end
+end)
+
+--====================================================
+-- Minimap icon
+--====================================================
+local minimapBtn = CreateFrame("Button", "PVPWhenMinimapButton", Minimap)
+minimapBtn:SetWidth(32)
+minimapBtn:SetHeight(32)
+minimapBtn:SetFrameStrata("MEDIUM")
+minimapBtn:SetFrameLevel(8)
+minimapBtn:EnableMouse(true)
+minimapBtn:SetMovable(true)
+minimapBtn:RegisterForDrag("LeftButton")
+minimapBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+-- Icon textures
+local iconTexture = minimapBtn:CreateTexture(nil, "BACKGROUND")
+iconTexture:SetWidth(20)
+iconTexture:SetHeight(20)
+iconTexture:SetTexture("Interface\\Icons\\INV_Sword_48")
+iconTexture:SetPoint("CENTER", minimapBtn, "CENTER", 0, 0)
+
+local overlay = minimapBtn:CreateTexture(nil, "OVERLAY")
+overlay:SetWidth(52)
+overlay:SetHeight(52)
+overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+overlay:SetPoint("TOPLEFT", minimapBtn, "TOPLEFT", 0, 0)
+
+local highlight = minimapBtn:CreateTexture(nil, "HIGHLIGHT")
+highlight:SetWidth(24)
+highlight:SetHeight(24)
+highlight:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+highlight:SetPoint("CENTER", minimapBtn, "CENTER", 0, 0)
+
+-- Position the button around the minimap
+local function UpdateMinimapPosition()
+    local angle = math.rad(PVPWhenDB.minimap.angle or 200)
+    local radius = 80
+    local x = math.cos(angle) * radius
+    local y = math.sin(angle) * radius
+    minimapBtn:SetPoint("CENTER", Minimap, "CENTER", x, y)
+end
+
+-- Drag to reposition around minimap
+local isDragging = false
+minimapBtn:SetScript("OnDragStart", function()
+    isDragging = true
+end)
+
+minimapBtn:SetScript("OnDragStop", function()
+    isDragging = false
+end)
+
+minimapBtn:SetScript("OnUpdate", function()
+    if not isDragging then return end
+    local mx, my = Minimap:GetCenter()
+    local cx, cy = GetCursorPosition()
+    local scale = Minimap:GetEffectiveScale()
+    cx = cx / scale
+    cy = cy / scale
+    PVPWhenDB.minimap.angle = math.deg(math.atan2(cy - my, cx - mx))
+    UpdateMinimapPosition()
+end)
+
+-- Left click = toggle panel, Right click = toggle icon visibility hint
+minimapBtn:SetScript("OnClick", function()
+    if arg1 == "LeftButton" then
+        if panel:IsShown() then
+            panel:Hide()
+        else
+            panel:Show()
+        end
+    elseif arg1 == "RightButton" then
+        QueueAll()
+    end
+end)
+
+minimapBtn:SetScript("OnEnter", function()
+    GameTooltip:SetOwner(minimapBtn, "ANCHOR_LEFT")
+    GameTooltip:AddLine("|cffff8800PVPWhen|r")
+    GameTooltip:AddLine("|cffffffffLeft-click:|r Toggle settings")
+    GameTooltip:AddLine("|cffffffffRight-click:|r Queue all")
+    GameTooltip:AddLine("|cffffffffDrag:|r Move icon")
+    GameTooltip:AddLine("|cff888888/pvpwhen minimap|r to hide icon")
+    GameTooltip:Show()
+end)
+
+minimapBtn:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+end)
+
+UpdateMinimapPosition()
+
+if not PVPWhenDB.minimap.show then
+    minimapBtn:Hide()
+end
+
 -- Slash commands
 SLASH_PVPWHEN1 = "/pvpwhen"
-SlashCmdList["PVPWHEN"] = function()
-    if panel:IsShown() then
-        panel:Hide()
+SlashCmdList["PVPWHEN"] = function(msg)
+    if msg == "minimap" then
+        PVPWhenDB.minimap.show = not PVPWhenDB.minimap.show
+        if PVPWhenDB.minimap.show then
+            minimapBtn:Show()
+            print("PVPWhen: Minimap icon shown")
+        else
+            minimapBtn:Hide()
+            print("PVPWhen: Minimap icon hidden")
+        end
     else
-        panel:Show()
+        if panel:IsShown() then
+            panel:Hide()
+        else
+            panel:Show()
+        end
     end
 end
 
