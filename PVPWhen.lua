@@ -382,7 +382,7 @@ minimapBtn:SetFrameLevel(8)
 minimapBtn:EnableMouse(true)
 minimapBtn:SetMovable(true)
 minimapBtn:RegisterForDrag("LeftButton")
-minimapBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+minimapBtn:RegisterForClicks("LeftButtonUp")
 
 -- Icon textures
 local iconTexture = minimapBtn:CreateTexture(nil, "BACKGROUND")
@@ -433,26 +433,19 @@ minimapBtn:SetScript("OnUpdate", function()
     UpdateMinimapPosition()
 end)
 
--- Left click = toggle panel, Right click = toggle icon visibility hint
 minimapBtn:SetScript("OnClick", function()
-    if arg1 == "LeftButton" then
-        if panel:IsShown() then
-            panel:Hide()
-        else
-            panel:Show()
-        end
-    elseif arg1 == "RightButton" then
-        QueueAll()
+    if panel:IsShown() then
+        panel:Hide()
+    else
+        panel:Show()
     end
 end)
 
 minimapBtn:SetScript("OnEnter", function()
     GameTooltip:SetOwner(minimapBtn, "ANCHOR_LEFT")
     GameTooltip:AddLine("|cffff8800PVPWhen|r")
-    GameTooltip:AddLine("|cffffffffLeft-click:|r Toggle settings")
-    GameTooltip:AddLine("|cffffffffRight-click:|r Queue all")
+    GameTooltip:AddLine("|cffffffffClick:|r Toggle settings")
     GameTooltip:AddLine("|cffffffffDrag:|r Move icon")
-    GameTooltip:AddLine("|cff888888/pvpwhen minimap|r to hide icon")
     GameTooltip:Show()
 end)
 
