@@ -1,64 +1,31 @@
 --========================================
--- BGAuto.lua for Turtle WoW
+-- PVPWhen for Turtle WoW
 -- Fully automatic BG queue using native API
 --========================================
 
 -- SavedVariables (persists between sessions)
-BGAutoDB = BGAutoDB or {
+PVPWhenDB = PVPWhenDB or {
     enabled = true,
     bgs = {
         wsg = false,
         ab = false,
         av = false,
-        tg = false,
-    },
-    arenas = {
-        rated2v2 = false,
-        rated3v3 = false,
-        rated5v5 = false,
-        skirmish = false,
     }
 }
-
-if not BGAutoDB.arenas then
-    BGAutoDB.arenas = {
-        rated2v2 = false,
-        rated3v3 = false,
-        rated5v5 = false,
-        skirmish = false,
-    }
-end
-
 
 -- BG API names (what JoinBattlegroundQueue expects)
 local BG_API_NAMES = {
     wsg = "Warsong Gulch",
     ab = "Arathi Basin",
     av = "Alterac Valley",
-    tg = "Thorn Gorge",
-}
-
-local BG_DISPLAY_NAMES = {
-    wsg = "Warsong Gulch",
-    ab = "Arathi Basin",
-    av = "Alterac Valley",
-    tg = "Thorn Gorge",
-}
-
-local ARENA_DISPLAY_NAMES = {
-    rated2v2 = "Rated (2v2)",
-    rated3v3 = "Rated (3v3)",
-    rated5v5 = "Rated (5v5)",
-    skirmish = "Skirmish",
 }
 
 --====================================================
 -- Queue system: processes one BG at a time
 --====================================================
-local BGQueueFrame = CreateFrame("Frame")
+local PVPWhenQueueFrame = CreateFrame("Frame")
 local pendingQueue = {}
 local isQueueing = false
-
 local autoQueueActive = false
 
 local function HideBattlefieldFrame()
@@ -67,7 +34,6 @@ local function HideBattlefieldFrame()
     end
 end
 
--- Check if already queued for a specific BG name
 local function IsAlreadyQueued(bgName)
     for i = 0, MAX_BATTLEFIELD_QUEUES do
         local status, name = GetBattlefieldStatus(i)
@@ -78,7 +44,6 @@ local function IsAlreadyQueued(bgName)
     return false
 end
 
--- Process the next item in the pending queue
 local function ProcessNextQueue()
     if isQueueing then return end
 
@@ -87,14 +52,14 @@ local function ProcessNextQueue()
         if not IsAlreadyQueued(name) then
             isQueueing = true
             autoQueueActive = true
-            BGQueueFrame:UnregisterAllEvents()
-            BGQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
-            BGQueueFrame:SetScript("OnEvent", function()
+            PVPWhenQueueFrame:UnregisterAllEvents()
+            PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
+            PVPWhenQueueFrame:SetScript("OnEvent", function()
                 SetSelectedBattlefield(0)
                 JoinBattlefield(0)
-                BGQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
+                PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
                 HideBattlefieldFrame()
-                print("BGAuto: Queued for " .. name)
+                print("PVPWhen: Queued for " .. name)
                 isQueueing = false
                 autoQueueActive = false
                 ProcessNextQueue()
@@ -105,55 +70,32 @@ local function ProcessNextQueue()
     end
 end
 
--- Add a BG/arena to the pending queue
 local function QueueBattleground(name)
     if IsAlreadyQueued(name) then return end
     table.insert(pendingQueue, name)
     ProcessNextQueue()
 end
 
---====================================================
--- Queue a specific BG by key
---====================================================
 local function QueueBG(bgKey)
     local name = BG_API_NAMES[bgKey]
     if not name then
-        print("BGAuto: Unknown BG key: " .. bgKey)
+        print("PVPWhen: Unknown BG key: " .. bgKey)
         return
     end
     QueueBattleground(name)
 end
 
 --====================================================
--- Queue a specific arena by key
+-- Queue all enabled BGs
 --====================================================
-local function QueueArena(arenaKey)
-    local name = ARENA_DISPLAY_NAMES[arenaKey]
-    if not name then
-        print("BGAuto: Unknown arena key: " .. arenaKey)
-        return
-    end
-    QueueBattleground(name)
-end
-
---====================================================
--- Queue all enabled BGs and arenas
---====================================================
-local BG_ORDER = {"wsg", "ab", "av", "tg"}
-local ARENA_ORDER = {"rated2v2", "rated3v3", "rated5v5", "skirmish"}
+local BG_ORDER = {"wsg", "ab", "av"}
 
 local function QueueAll()
-    if not BGAutoDB.enabled then return end
+    if not PVPWhenDB.enabled then return end
 
     for _, key in ipairs(BG_ORDER) do
-        if BGAutoDB.bgs[key] then
+        if PVPWhenDB.bgs[key] then
             QueueBG(key)
-        end
-    end
-
-    for _, key in ipairs(ARENA_ORDER) do
-        if BGAutoDB.arenas[key] then
-            QueueArena(key)
         end
     end
 end
@@ -182,9 +124,9 @@ end)
 --====================================================
 -- Settings panel
 --====================================================
-local panel = CreateFrame("Frame", "BGAutoPanel", UIParent)
+local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(220)
-panel:SetHeight(320)
+panel:SetHeight(160)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background"})
 panel:SetBackdropColor(0, 0, 0, 0.8)
@@ -198,7 +140,7 @@ panel:Hide()
 -- Title
 local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 title:SetPoint("TOP", panel, "TOP", 0, -10)
-title:SetText("BGAuto Settings")
+title:SetText("PVPWhen")
 
 -- Helper to create a styled checkbox
 local function MakeCheckbox(parent, text, y)
@@ -223,9 +165,9 @@ end
 -- BG checkboxes
 local function CreateBGCheckbox(parent, text, key, y)
     local cb = MakeCheckbox(parent, text, y)
-    cb:SetChecked(BGAutoDB.bgs[key] or false)
+    cb:SetChecked(PVPWhenDB.bgs[key] or false)
     cb:SetScript("OnClick", function()
-        BGAutoDB.bgs[key] = cb:GetChecked()
+        PVPWhenDB.bgs[key] = cb:GetChecked()
         if cb:GetChecked() then
             QueueBG(key)
         end
@@ -235,29 +177,6 @@ end
 CreateBGCheckbox(panel, "Warsong Gulch", "wsg", -30)
 CreateBGCheckbox(panel, "Arathi Basin", "ab", -55)
 CreateBGCheckbox(panel, "Alterac Valley", "av", -80)
-CreateBGCheckbox(panel, "Thorn Gorge", "tg", -105)
-
--- Arena label
-local arenaLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-arenaLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 20, -130)
-arenaLabel:SetText("Arenas:")
-
--- Arena checkboxes
-local function CreateArenaCheckbox(parent, text, key, y)
-    local cb = MakeCheckbox(parent, text, y)
-    cb:SetChecked(BGAutoDB.arenas[key] or false)
-    cb:SetScript("OnClick", function()
-        BGAutoDB.arenas[key] = cb:GetChecked()
-        if cb:GetChecked() then
-            QueueArena(key)
-        end
-    end)
-end
-
-CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -150)
-CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -175)
-CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -200)
-CreateArenaCheckbox(panel, "Skirmish", "skirmish", -225)
 
 -- Queue All button
 local queueBtn = CreateFrame("Button", nil, panel)
@@ -289,8 +208,8 @@ closeBtn:SetScript("OnClick", function()
 end)
 
 -- Slash commands
-SLASH_BGAUTO1 = "/bgauto"
-SlashCmdList["BGAUTO"] = function()
+SLASH_PVPWHEN1 = "/pvpwhen"
+SlashCmdList["PVPWHEN"] = function()
     if panel:IsShown() then
         panel:Hide()
     else
@@ -298,38 +217,16 @@ SlashCmdList["BGAUTO"] = function()
     end
 end
 
--- Debug: show current queue status and available BGs
-SLASH_BGAUTODEBUG1 = "/bgautodebug"
-SlashCmdList["BGAUTODEBUG"] = function()
-    print("=== Queue Status ===")
+-- Debug: show current queue status
+SLASH_PVPWHENDEBUG1 = "/pvpwhendebug"
+SlashCmdList["PVPWHENDEBUG"] = function()
+    print("=== PVPWhen Queue Status ===")
     for i = 0, MAX_BATTLEFIELD_QUEUES do
         local status, name = GetBattlefieldStatus(i)
         if status and status ~= "none" then
             print("  Slot " .. i .. ": " .. status .. " - " .. (name or "unknown"))
         end
     end
-
-    print("=== Trying BG names ===")
-    local testNames = {
-        "Warsong Gulch", "Arathi Basin", "Alterac Valley",
-        "Thorn Gorge", "ThornGorge", "Thorn gorge",
-        "Blood Ring", "Azshara Crater",
-    }
-    for _, n in ipairs(testNames) do
-        print("  " .. n)
-    end
-    print("Try: /bgtest NAME to test a specific name")
 end
 
--- Test a specific BG name
-SLASH_BGTEST1 = "/bgtest"
-SlashCmdList["BGTEST"] = function(msg)
-    if msg and msg ~= "" then
-        print("BGAuto: Testing queue for '" .. msg .. "'")
-        QueueBattleground(msg)
-    else
-        print("Usage: /bgtest Thorn Gorge")
-    end
-end
-
-print("BGAuto loaded. Type /bgauto to toggle settings.")
+print("PVPWhen loaded. Type /pvpwhen to toggle settings.")
