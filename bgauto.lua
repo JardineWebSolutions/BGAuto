@@ -62,7 +62,7 @@ local function OpenDropdown()
         print("BGAuto: TWMiniMapBattlefieldFrame not found!")
         return false
     end
-    TWMiniMapBattlefieldFrame:Click()
+    TWMiniMapBattlefieldFrame:Click("LeftButton")
     return true
 end
 
@@ -157,7 +157,7 @@ local function QueueBG(bgKey)
     if not OpenDropdown() then return end
     queueStep = "bg_select"
     queueTarget = bgKey
-    StartTimer(0.3)
+    StartTimer(1.0)
 end
 
 --====================================================
@@ -167,7 +167,7 @@ local function QueueArena(arenaKey)
     if not OpenDropdown() then return end
     queueStep = "arena_open"
     queueTarget = arenaKey
-    StartTimer(0.3)
+    StartTimer(1.0)
 end
 
 --====================================================
@@ -176,25 +176,35 @@ end
 local BG_ORDER = {"wsg", "ab", "av", "tg"}
 local ARENA_ORDER = {"rated2v2", "rated3v3", "rated5v5", "skirmish"}
 
-local function TryQueue()
+-- Track what we've already queued for so we don't double-queue
+local alreadyQueued = {}
+
+local function TryQueueNext()
     if not BGAutoDB.enabled then return end
     if queueStep ~= "idle" then return end
 
-    -- Check BGs in fixed order
+    -- Check BGs in fixed order, skip already queued
     for _, key in ipairs(BG_ORDER) do
-        if BGAutoDB.bgs[key] then
+        if BGAutoDB.bgs[key] and not alreadyQueued[key] then
             QueueBG(key)
-            return
+            return true
         end
     end
 
-    -- Check arenas in fixed order
+    -- Check arenas in fixed order, skip already queued
     for _, key in ipairs(ARENA_ORDER) do
-        if BGAutoDB.arenas[key] then
+        if BGAutoDB.arenas[key] and not alreadyQueued[key] then
             QueueArena(key)
-            return
+            return true
         end
     end
+
+    return false
+end
+
+local function TryQueue()
+    alreadyQueued = {}
+    TryQueueNext()
 end
 
 --====================================================
@@ -217,16 +227,26 @@ ticker:SetScript("OnUpdate", function()
     elseif queueStep == "bg_join" then
         if ClickJoinBattle() then
             print("BGAuto: Queued for " .. BG_NAMES[queueTarget])
+            alreadyQueued[queueTarget] = true
             queueStep = "idle"
             HideAllFrames()
+            -- Queue next enabled BG/arena after a short delay
+            StartTimer(1.5)
+            queueStep = "chain_next"
         else
             StartTimer(0.2)
+        end
+
+    elseif queueStep == "chain_next" then
+        queueStep = "idle"
+        if not TryQueueNext() then
+            HideAllFrames()
         end
 
     elseif queueStep == "arena_open" then
         if ClickArenaDropdown() then
             queueStep = "arena_select"
-            StartTimer(0.3)
+            StartTimer(1.0)
         else
             queueStep = "idle"
             HideAllFrames()
@@ -244,8 +264,12 @@ ticker:SetScript("OnUpdate", function()
     elseif queueStep == "arena_join" then
         if ClickJoinBattle() then
             print("BGAuto: Queued for arena")
+            alreadyQueued[queueTarget] = true
             queueStep = "idle"
             HideAllFrames()
+            -- Queue next enabled BG/arena after a short delay
+            StartTimer(1.5)
+            queueStep = "chain_next"
         else
             StartTimer(0.2)
         end
@@ -256,8 +280,8 @@ end)
 -- Event handler for auto requeue
 --====================================================
 local f = CreateFrame("Frame")
-f:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 f:SetScript("OnEvent", function()
     TryQueue()
 end)
