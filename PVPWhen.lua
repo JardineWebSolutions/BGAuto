@@ -10,7 +10,30 @@ PVPWhenDB = PVPWhenDB or {
         wsg = false,
         ab = false,
         av = false,
+    },
+    arenas = {
+        skirmish = false,
+        rated2v2 = false,
+        rated3v3 = false,
+        rated5v5 = false,
     }
+}
+
+if not PVPWhenDB.arenas then
+    PVPWhenDB.arenas = {
+        skirmish = false,
+        rated2v2 = false,
+        rated3v3 = false,
+        rated5v5 = false,
+    }
+end
+
+-- Arena API IDs for JoinArenaQueue
+local ARENA_IDS = {
+    skirmish = 0,
+    rated2v2 = 1,
+    rated3v3 = 2,
+    rated5v5 = 3,
 }
 
 -- BG API names (what JoinBattlegroundQueue expects)
@@ -86,9 +109,23 @@ local function QueueBG(bgKey)
 end
 
 --====================================================
--- Queue all enabled BGs
+-- Queue a specific arena by key
+--====================================================
+local function QueueArena(arenaKey)
+    local id = ARENA_IDS[arenaKey]
+    if id == nil then
+        print("PVPWhen: Unknown arena key: " .. arenaKey)
+        return
+    end
+    JoinArenaQueue(id)
+    print("PVPWhen: Queued for arena (" .. arenaKey .. ")")
+end
+
+--====================================================
+-- Queue all enabled BGs and arenas
 --====================================================
 local BG_ORDER = {"wsg", "ab", "av"}
+local ARENA_ORDER = {"skirmish", "rated2v2", "rated3v3", "rated5v5"}
 
 local function QueueAll()
     if not PVPWhenDB.enabled then return end
@@ -96,6 +133,12 @@ local function QueueAll()
     for _, key in ipairs(BG_ORDER) do
         if PVPWhenDB.bgs[key] then
             QueueBG(key)
+        end
+    end
+
+    for _, key in ipairs(ARENA_ORDER) do
+        if PVPWhenDB.arenas[key] then
+            QueueArena(key)
         end
     end
 end
@@ -126,7 +169,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(220)
-panel:SetHeight(160)
+panel:SetHeight(300)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background"})
 panel:SetBackdropColor(0, 0, 0, 0.8)
@@ -177,6 +220,28 @@ end
 CreateBGCheckbox(panel, "Warsong Gulch", "wsg", -30)
 CreateBGCheckbox(panel, "Arathi Basin", "ab", -55)
 CreateBGCheckbox(panel, "Alterac Valley", "av", -80)
+
+-- Arena label
+local arenaLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+arenaLabel:SetPoint("TOPLEFT", panel, "TOPLEFT", 20, -110)
+arenaLabel:SetText("Arenas:")
+
+-- Arena checkboxes
+local function CreateArenaCheckbox(parent, text, key, y)
+    local cb = MakeCheckbox(parent, text, y)
+    cb:SetChecked(PVPWhenDB.arenas[key] or false)
+    cb:SetScript("OnClick", function()
+        PVPWhenDB.arenas[key] = cb:GetChecked()
+        if cb:GetChecked() then
+            QueueArena(key)
+        end
+    end)
+end
+
+CreateArenaCheckbox(panel, "Skirmish", "skirmish", -130)
+CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -155)
+CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -180)
+CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -205)
 
 -- Queue All button
 local queueBtn = CreateFrame("Button", nil, panel)
