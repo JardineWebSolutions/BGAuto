@@ -100,7 +100,11 @@ local function ProcessNextQueue()
             PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
             PVPWhenQueueFrame:SetScript("OnEvent", function()
                 SetSelectedBattlefield(0)
-                JoinBattlefield(0, currentAsGroup)
+                if currentAsGroup == 1 then
+                    JoinBattlefield(0, 1)
+                else
+                    JoinBattlefield(0)
+                end
                 PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
                 HideBattlefieldFrame()
                 local suffix = currentAsGroup == 1 and " (group)" or ""
@@ -147,7 +151,11 @@ local function QueueArena(arenaKey, asGroup)
     PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
     PVPWhenQueueFrame:SetScript("OnEvent", function()
         SetSelectedBattlefield(0)
-        JoinBattlefield(0, joinFlag)
+        if joinFlag == 1 then
+            JoinBattlefield(0, 1)
+        else
+            JoinBattlefield(0)
+        end
         PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
         HideBattlefieldFrame()
         local suffix = joinFlag == 1 and " (group)" or ""
