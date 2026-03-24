@@ -7,7 +7,7 @@
 BGAutoDB = BGAutoDB or {
     enabled = true,
     bgs = {
-        wsg = true,
+        wsg = false,
         ab = false,
         av = false,
         tg = false,
@@ -283,7 +283,8 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 f:SetScript("OnEvent", function()
-    TryQueue()
+    -- Only queue things we haven't already queued this session
+    TryQueueNext()
 end)
 
 --====================================================
@@ -329,7 +330,12 @@ local function CreateCheckbox(parent, text, dbTable, key, y)
     cb:SetScript("OnClick", function()
         dbTable[key] = cb:GetChecked()
         if cb:GetChecked() then
-            TryQueue()
+            -- Reset tracking so this new selection gets queued
+            alreadyQueued[key] = nil
+            TryQueueNext()
+        else
+            -- Unchecked, remove from tracking
+            alreadyQueued[key] = nil
         end
     end)
 end
