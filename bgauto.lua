@@ -249,17 +249,38 @@ SlashCmdList["BGAUTO"] = function()
     end
 end
 
--- Debug: show current queue status
+-- Debug: show current queue status and available BGs
 SLASH_BGAUTODEBUG1 = "/bgautodebug"
 SlashCmdList["BGAUTODEBUG"] = function()
-    print("=== BGAuto Queue Status ===")
+    print("=== Queue Status ===")
     for i = 0, MAX_BATTLEFIELD_QUEUES do
         local status, name = GetBattlefieldStatus(i)
         if status and status ~= "none" then
             print("  Slot " .. i .. ": " .. status .. " - " .. (name or "unknown"))
         end
     end
-    print("=== Done ===")
+
+    print("=== Trying BG names ===")
+    local testNames = {
+        "Warsong Gulch", "Arathi Basin", "Alterac Valley",
+        "Thorn Gorge", "ThornGorge", "Thorn gorge",
+        "Blood Ring", "Azshara Crater",
+    }
+    for _, n in ipairs(testNames) do
+        print("  " .. n)
+    end
+    print("Try: /bgtest NAME to test a specific name")
+end
+
+-- Test a specific BG name
+SLASH_BGTEST1 = "/bgtest"
+SlashCmdList["BGTEST"] = function(msg)
+    if msg and msg ~= "" then
+        print("BGAuto: Testing queue for '" .. msg .. "'")
+        QueueBattleground(msg)
+    else
+        print("Usage: /bgtest Thorn Gorge")
+    end
 end
 
 print("BGAuto loaded. Type /bgauto to toggle settings.")
