@@ -101,9 +101,9 @@ local function ProcessNextQueue()
             PVPWhenQueueFrame:UnregisterAllEvents()
             PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
             PVPWhenQueueFrame:SetScript("OnEvent", function()
-                local joinType = PVPWhenDB.groupQueue and 1 or 0
+                local asGroup = PVPWhenDB.groupQueue and 1 or 0
                 SetSelectedBattlefield(0)
-                JoinBattlefield(joinType)
+                JoinBattlefield(0, asGroup)
                 PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
                 HideBattlefieldFrame()
                 print("PVPWhen: Queued for " .. name .. (PVPWhenDB.groupQueue and " (group)" or ""))
@@ -145,9 +145,9 @@ local function QueueArena(arenaKey)
     PVPWhenQueueFrame:UnregisterAllEvents()
     PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
     PVPWhenQueueFrame:SetScript("OnEvent", function()
-        local joinType = PVPWhenDB.groupQueue and 1 or 0
+        local asGroup = PVPWhenDB.groupQueue and 1 or 0
         SetSelectedBattlefield(0)
-        JoinBattlefield(joinType)
+        JoinBattlefield(0, asGroup)
         PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
         HideBattlefieldFrame()
         print("PVPWhen: Queued for arena (" .. arenaKey .. ")" .. (PVPWhenDB.groupQueue and " (group)" or ""))
