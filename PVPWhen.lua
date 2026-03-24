@@ -24,6 +24,8 @@ PVPWhenDB = PVPWhenDB or {
     }
 }
 
+local UpdateMinimapPosition
+
 -- Fix up saved variables after they load
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("VARIABLES_LOADED")
@@ -421,7 +423,7 @@ overlay:SetPoint("TOPLEFT", minimapBtn, "TOPLEFT", 0, 0)
 -- Compatibility for minimap bag addons
 minimapBtn.GetIcon = function() return "Interface\\Icons\\INV_Misc_QuestionMark" end
 
-local function UpdateMinimapPosition()
+UpdateMinimapPosition = function()
     if not PVPWhenDB.minimap then PVPWhenDB.minimap = { angle = 200 } end
     local angle = math.rad(PVPWhenDB.minimap.angle or 200)
     local radius = 80
