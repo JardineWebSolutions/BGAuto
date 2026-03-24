@@ -245,7 +245,7 @@ closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
 closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
 closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
 closeBtn:SetScript("OnClick", function()
-    panel:Hide()
+    panel:ForceHide()
 end)
 
 -- Section label helper
@@ -386,17 +386,21 @@ minimapBtn:SetMovable(true)
 minimapBtn:RegisterForDrag("RightButton")
 minimapBtn:RegisterForClicks("LeftButtonUp")
 
-local iconTexture = minimapBtn:CreateTexture(nil, "BACKGROUND")
-iconTexture:SetWidth(20)
-iconTexture:SetHeight(20)
-iconTexture:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-iconTexture:SetPoint("CENTER", minimapBtn, "CENTER", 0, 0)
+-- Properties that minimap bag addons look for
+minimapBtn.icon = minimapBtn:CreateTexture(nil, "BACKGROUND")
+minimapBtn.icon:SetWidth(20)
+minimapBtn.icon:SetHeight(20)
+minimapBtn.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+minimapBtn.icon:SetPoint("CENTER", minimapBtn, "CENTER", 0, 0)
 
 local overlay = minimapBtn:CreateTexture(nil, "OVERLAY")
 overlay:SetWidth(52)
 overlay:SetHeight(52)
 overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 overlay:SetPoint("TOPLEFT", minimapBtn, "TOPLEFT", 0, 0)
+
+-- Compatibility for minimap bag addons
+minimapBtn.GetIcon = function() return "Interface\\Icons\\INV_Misc_QuestionMark" end
 
 local function UpdateMinimapPosition()
     if not PVPWhenDB.minimap then PVPWhenDB.minimap = { angle = 200 } end
@@ -431,9 +435,9 @@ end)
 
 minimapBtn:SetScript("OnClick", function()
     if panel:IsShown() then
-        panel:Hide()
+        panel:ForceHide()
     else
-        panel:Show()
+        panel:ForceShow()
     end
 end)
 
@@ -455,9 +459,9 @@ UpdateMinimapPosition()
 SLASH_PVPWHEN1 = "/pvpwhen"
 SlashCmdList["PVPWHEN"] = function()
     if panel:IsShown() then
-        panel:Hide()
+        panel:ForceHide()
     else
-        panel:Show()
+        panel:ForceShow()
     end
 end
 
