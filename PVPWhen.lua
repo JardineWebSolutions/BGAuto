@@ -14,9 +14,6 @@ PVPWhenDB = PVPWhenDB or {
     },
     arenas = {
         skirmish = false,
-        rated2v2 = false,
-        rated3v3 = false,
-        rated5v5 = false,
     },
     minimap = {
         show = true,
@@ -36,9 +33,6 @@ initFrame:SetScript("OnEvent", function()
     if not PVPWhenDB.arenas then
         PVPWhenDB.arenas = {
             skirmish = false,
-            rated2v2 = false,
-            rated3v3 = false,
-            rated5v5 = false,
         }
     end
     if _G["PVPWhenMinimapButton"] then
@@ -49,9 +43,6 @@ end)
 -- Arena API IDs for JoinArenaQueue
 local ARENA_IDS = {
     skirmish = 0,
-    rated2v2 = 1,
-    rated3v3 = 2,
-    rated5v5 = 3,
 }
 
 -- BG API names (what JoinBattlegroundQueue expects)
@@ -169,7 +160,7 @@ end
 -- Queue all enabled BGs and arenas
 --====================================================
 local BG_ORDER = {"wsg", "ab", "av", "tg"}
-local ARENA_ORDER = {"skirmish", "rated2v2", "rated3v3", "rated5v5"}
+local ARENA_ORDER = {"skirmish"}
 
 local function QueueAll(asGroup)
     if not PVPWhenDB.enabled then return end
@@ -213,7 +204,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(250)
-panel:SetHeight(380)
+panel:SetHeight(300)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -368,12 +359,9 @@ local function CreateArenaCheckbox(parent, text, key, y)
 end
 
 CreateArenaCheckbox(panel, "Skirmish", "skirmish", -192)
-CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -218)
-CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -244)
-CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -270)
 
 -- Buttons
-CreateSeparator(panel, -300)
+CreateSeparator(panel, -222)
 
 local queueBtn = CreateFrame("Button", nil, panel)
 queueBtn:SetWidth(140)
