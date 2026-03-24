@@ -18,7 +18,6 @@ PVPWhenDB = PVPWhenDB or {
         rated3v3 = false,
         rated5v5 = false,
     },
-    groupQueue = false,
     minimap = {
         show = true,
         angle = 200,
@@ -41,9 +40,6 @@ initFrame:SetScript("OnEvent", function()
             rated3v3 = false,
             rated5v5 = false,
         }
-    end
-    if PVPWhenDB.groupQueue == nil then
-        PVPWhenDB.groupQueue = false
     end
     if _G["PVPWhenMinimapButton"] then
         UpdateMinimapPosition()
@@ -90,6 +86,8 @@ local function IsAlreadyQueued(bgName)
     return false
 end
 
+local currentAsGroup = 0
+
 local function ProcessNextQueue()
     if isQueueing then return end
 
@@ -101,12 +99,12 @@ local function ProcessNextQueue()
             PVPWhenQueueFrame:UnregisterAllEvents()
             PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
             PVPWhenQueueFrame:SetScript("OnEvent", function()
-                local asGroup = PVPWhenDB.groupQueue and 1 or 0
                 SetSelectedBattlefield(0)
-                JoinBattlefield(0, asGroup)
+                JoinBattlefield(0, currentAsGroup)
                 PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
                 HideBattlefieldFrame()
-                print("PVPWhen: Queued for " .. name .. (PVPWhenDB.groupQueue and " (group)" or ""))
+                local suffix = currentAsGroup == 1 and " (group)" or ""
+                print("PVPWhen: Queued for " .. name .. suffix)
                 isQueueing = false
                 autoQueueActive = false
                 ProcessNextQueue()
@@ -115,6 +113,7 @@ local function ProcessNextQueue()
             return
         end
     end
+    currentAsGroup = 0
 end
 
 local function QueueBattleground(name)
@@ -123,34 +122,36 @@ local function QueueBattleground(name)
     ProcessNextQueue()
 end
 
-local function QueueBG(bgKey)
+local function QueueBG(bgKey, asGroup)
     local name = BG_API_NAMES[bgKey]
     if not name then
         print("PVPWhen: Unknown BG key: " .. bgKey)
         return
     end
+    if asGroup then currentAsGroup = 1 end
     QueueBattleground(name)
 end
 
 --====================================================
 -- Queue a specific arena by key
 --====================================================
-local function QueueArena(arenaKey)
+local function QueueArena(arenaKey, asGroup)
     local id = ARENA_IDS[arenaKey]
     if id == nil then
         print("PVPWhen: Unknown arena key: " .. arenaKey)
         return
     end
+    local joinFlag = asGroup and 1 or 0
     autoQueueActive = true
     PVPWhenQueueFrame:UnregisterAllEvents()
     PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
     PVPWhenQueueFrame:SetScript("OnEvent", function()
-        local asGroup = PVPWhenDB.groupQueue and 1 or 0
         SetSelectedBattlefield(0)
-        JoinBattlefield(0, asGroup)
+        JoinBattlefield(0, joinFlag)
         PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
         HideBattlefieldFrame()
-        print("PVPWhen: Queued for arena (" .. arenaKey .. ")" .. (PVPWhenDB.groupQueue and " (group)" or ""))
+        local suffix = joinFlag == 1 and " (group)" or ""
+        print("PVPWhen: Queued for arena (" .. arenaKey .. ")" .. suffix)
         autoQueueActive = false
     end)
     JoinArenaQueue(id)
@@ -162,18 +163,18 @@ end
 local BG_ORDER = {"wsg", "ab", "av", "tg"}
 local ARENA_ORDER = {"skirmish", "rated2v2", "rated3v3", "rated5v5"}
 
-local function QueueAll()
+local function QueueAll(asGroup)
     if not PVPWhenDB.enabled then return end
 
     for _, key in ipairs(BG_ORDER) do
         if PVPWhenDB.bgs[key] then
-            QueueBG(key)
+            QueueBG(key, asGroup)
         end
     end
 
     for _, key in ipairs(ARENA_ORDER) do
         if PVPWhenDB.arenas[key] then
-            QueueArena(key)
+            QueueArena(key, asGroup)
         end
     end
 end
@@ -186,9 +187,7 @@ eventFrame:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function()
     if isQueueing then return end
-    if not PVPWhenDB.groupQueue then
-        if GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0 then return end
-    end
+    if GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0 then return end
     QueueAll()
 end)
 
@@ -206,7 +205,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(250)
-panel:SetHeight(420)
+panel:SetHeight(380)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -365,28 +364,13 @@ CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -218)
 CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -244)
 CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -270)
 
--- Options section
+-- Buttons
 CreateSeparator(panel, -300)
-CreateSectionLabel(panel, "Options", -304)
-
-local groupCb = MakeCheckbox(panel, "Group Queue", -326)
-groupCb:SetChecked(PVPWhenDB.groupQueue or false)
-groupCb:SetScript("OnClick", function()
-    PVPWhenDB.groupQueue = groupCb:GetChecked() and true or false
-    if PVPWhenDB.groupQueue then
-        print("PVPWhen: Group queue |cff00ff00enabled|r")
-    else
-        print("PVPWhen: Group queue |cffff0000disabled|r")
-    end
-end)
-
--- Queue All button
-CreateSeparator(panel, -354)
 
 local queueBtn = CreateFrame("Button", nil, panel)
 queueBtn:SetWidth(140)
 queueBtn:SetHeight(28)
-queueBtn:SetPoint("BOTTOM", panel, "BOTTOM", 0, 18)
+queueBtn:SetPoint("BOTTOM", panel, "BOTTOM", 0, 48)
 queueBtn:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -410,6 +394,35 @@ queueBtn:SetScript("OnLeave", function()
 end)
 queueBtn:SetScript("OnClick", function()
     QueueAll()
+end)
+
+local groupBtn = CreateFrame("Button", nil, panel)
+groupBtn:SetWidth(140)
+groupBtn:SetHeight(28)
+groupBtn:SetPoint("BOTTOM", panel, "BOTTOM", 0, 16)
+groupBtn:SetBackdrop({
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true,
+    tileSize = 16,
+    edgeSize = 12,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 },
+})
+groupBtn:SetBackdropColor(0.1, 0.1, 0.4, 0.8)
+groupBtn:SetBackdropBorderColor(0.3, 0.3, 0.7, 0.8)
+
+local groupBtnText = groupBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+groupBtnText:SetPoint("CENTER", groupBtn, "CENTER", 0, 0)
+groupBtnText:SetText("|cffffffffGroup Queue|r")
+
+groupBtn:SetScript("OnEnter", function()
+    groupBtn:SetBackdropColor(0.15, 0.15, 0.5, 1.0)
+end)
+groupBtn:SetScript("OnLeave", function()
+    groupBtn:SetBackdropColor(0.1, 0.1, 0.4, 0.8)
+end)
+groupBtn:SetScript("OnClick", function()
+    QueueAll(true)
 end)
 
 
