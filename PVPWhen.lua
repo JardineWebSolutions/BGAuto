@@ -18,6 +18,7 @@ PVPWhenDB = PVPWhenDB or {
         rated3v3 = false,
         rated5v5 = false,
     },
+    groupQueue = false,
     minimap = {
         show = true,
         angle = 200,
@@ -40,6 +41,9 @@ initFrame:SetScript("OnEvent", function()
             rated3v3 = false,
             rated5v5 = false,
         }
+    end
+    if PVPWhenDB.groupQueue == nil then
+        PVPWhenDB.groupQueue = false
     end
     if _G["PVPWhenMinimapButton"] then
         UpdateMinimapPosition()
@@ -97,11 +101,12 @@ local function ProcessNextQueue()
             PVPWhenQueueFrame:UnregisterAllEvents()
             PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
             PVPWhenQueueFrame:SetScript("OnEvent", function()
+                local joinType = PVPWhenDB.groupQueue and 1 or 0
                 SetSelectedBattlefield(0)
-                JoinBattlefield(0)
+                JoinBattlefield(joinType)
                 PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
                 HideBattlefieldFrame()
-                print("PVPWhen: Queued for " .. name)
+                print("PVPWhen: Queued for " .. name .. (PVPWhenDB.groupQueue and " (group)" or ""))
                 isQueueing = false
                 autoQueueActive = false
                 ProcessNextQueue()
@@ -140,11 +145,12 @@ local function QueueArena(arenaKey)
     PVPWhenQueueFrame:UnregisterAllEvents()
     PVPWhenQueueFrame:RegisterEvent("BATTLEFIELDS_SHOW")
     PVPWhenQueueFrame:SetScript("OnEvent", function()
+        local joinType = PVPWhenDB.groupQueue and 1 or 0
         SetSelectedBattlefield(0)
-        JoinBattlefield(0)
+        JoinBattlefield(joinType)
         PVPWhenQueueFrame:UnregisterEvent("BATTLEFIELDS_SHOW")
         HideBattlefieldFrame()
-        print("PVPWhen: Queued for arena (" .. arenaKey .. ")")
+        print("PVPWhen: Queued for arena (" .. arenaKey .. ")" .. (PVPWhenDB.groupQueue and " (group)" or ""))
         autoQueueActive = false
     end)
     JoinArenaQueue(id)
@@ -180,7 +186,9 @@ eventFrame:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function()
     if isQueueing then return end
-    if GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0 then return end
+    if not PVPWhenDB.groupQueue then
+        if GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0 then return end
+    end
     QueueAll()
 end)
 
@@ -198,7 +206,7 @@ end)
 --====================================================
 local panel = CreateFrame("Frame", "PVPWhenPanel", UIParent)
 panel:SetWidth(250)
-panel:SetHeight(370)
+panel:SetHeight(420)
 panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 panel:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -357,8 +365,23 @@ CreateArenaCheckbox(panel, "Rated (2v2)", "rated2v2", -218)
 CreateArenaCheckbox(panel, "Rated (3v3)", "rated3v3", -244)
 CreateArenaCheckbox(panel, "Rated (5v5)", "rated5v5", -270)
 
--- Queue All button
+-- Options section
 CreateSeparator(panel, -300)
+CreateSectionLabel(panel, "Options", -304)
+
+local groupCb = MakeCheckbox(panel, "Group Queue", -326)
+groupCb:SetChecked(PVPWhenDB.groupQueue or false)
+groupCb:SetScript("OnClick", function()
+    PVPWhenDB.groupQueue = groupCb:GetChecked() and true or false
+    if PVPWhenDB.groupQueue then
+        print("PVPWhen: Group queue |cff00ff00enabled|r")
+    else
+        print("PVPWhen: Group queue |cffff0000disabled|r")
+    end
+end)
+
+-- Queue All button
+CreateSeparator(panel, -354)
 
 local queueBtn = CreateFrame("Button", nil, panel)
 queueBtn:SetWidth(140)
