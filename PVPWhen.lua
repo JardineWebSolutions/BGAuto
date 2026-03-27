@@ -62,12 +62,8 @@ local isQueueing = false
 local autoQueueActive = false
 
 local function HideBattlefieldFrame()
-    local gameMenuWasShown = _G["GameMenuFrame"] and _G["GameMenuFrame"]:IsShown()
     if _G["BattlefieldFrame"] then
-        _G["BattlefieldFrame"]:Hide()
-    end
-    if gameMenuWasShown and _G["GameMenuFrame"] and not _G["GameMenuFrame"]:IsShown() then
-        _G["GameMenuFrame"]:Show()
+        HideUIPanel(_G["BattlefieldFrame"])
     end
 end
 
@@ -202,19 +198,6 @@ hideFrame:SetScript("OnEvent", function()
         HideBattlefieldFrame()
     end
 end)
-
--- Ensure Escape always opens GameMenuFrame even if BattlefieldFrame consumed it
-local orig_ToggleGameMenu = ToggleGameMenu
-function ToggleGameMenu()
-    if _G["GameMenuFrame"] and _G["GameMenuFrame"]:IsShown() then
-        _G["GameMenuFrame"]:Hide()
-    else
-        orig_ToggleGameMenu()
-        if _G["GameMenuFrame"] and not _G["GameMenuFrame"]:IsShown() then
-            _G["GameMenuFrame"]:Show()
-        end
-    end
-end
 
 --====================================================
 -- Settings panel
