@@ -203,6 +203,19 @@ hideFrame:SetScript("OnEvent", function()
     end
 end)
 
+-- Ensure Escape always opens GameMenuFrame even if BattlefieldFrame consumed it
+local orig_ToggleGameMenu = ToggleGameMenu
+function ToggleGameMenu()
+    if _G["GameMenuFrame"] and _G["GameMenuFrame"]:IsShown() then
+        _G["GameMenuFrame"]:Hide()
+    else
+        orig_ToggleGameMenu()
+        if _G["GameMenuFrame"] and not _G["GameMenuFrame"]:IsShown() then
+            _G["GameMenuFrame"]:Show()
+        end
+    end
+end
+
 --====================================================
 -- Settings panel
 --====================================================
